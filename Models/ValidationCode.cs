@@ -15,6 +15,6 @@ public class ValidationCode
     [MaxLength(6)]
     public string Validation_code { get; set; }
     
-    public DateTime Timestamp { get; set; } = DateTime.Now;
+    public DateTime Timestamp { get; set; } = DateTime.UtcNow;
     
 }

@@ -16,8 +16,8 @@ public class Tag
     public string Sign { get; set; }
     
     public DateTime? Deleted_at { get; set; }
-    public DateTime Created_at { get; set; } = DateTime.Now;
-    public DateTime Updated_at { get; set; } = DateTime.Now;
+    public DateTime Created_at { get; set; } = DateTime.UtcNow;
+    public DateTime Updated_at { get; set; } = DateTime.UtcNow;
     
     public Kind Kind { get; set; }
     
