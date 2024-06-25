@@ -27,6 +27,6 @@ public class Tag
 
 public enum Kind
 {
-    Income,
-    Expenses
+    income,
+    expenses
 }

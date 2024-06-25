@@ -45,6 +45,8 @@ namespace bkpDN.Controllers
                 user = new User { Email = body["email"] };
                 _context.Users.Add(user);
                 await _context.SaveChangesAsync();
+                // Refresh the user object
+                await _context.Entry(user).ReloadAsync();
             }
             
             // Generate jwt token
