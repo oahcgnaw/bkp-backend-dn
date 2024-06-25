@@ -1,6 +1,8 @@
+using System.Security.Claims;
 using bkpDN.Data;
 using bkpDN.Services;
 using bkpDN.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -70,6 +72,18 @@ namespace bkpDN.Controllers
 
             return Ok(new { success = true });
         }
+        
+        [HttpGet("me")]
+        [Authorize]
+        public async Task<IActionResult> GetMe()
+        {
+            var email = User.FindFirst(ClaimTypes.Email)?.Value;
+            var user = await _context.Users
+                .Where(u => u.Email == email)
+                .FirstOrDefaultAsync();
+            return Ok(new {resource = user});
+        }
+
     }
 
 }
