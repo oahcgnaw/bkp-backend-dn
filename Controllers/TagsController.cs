@@ -3,6 +3,7 @@ using bkpDN.Data;
 using bkpDN.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace bkpDN.Controllers
 
@@ -12,32 +13,140 @@ namespace bkpDN.Controllers
     public class TagsController : ControllerBase
     {
         private readonly AppDbContext _context;
-        private readonly ILogger<TagsController> _logger;
 
-        public TagsController(AppDbContext context, ILogger<TagsController> logger)
+        public TagsController(AppDbContext context)
         {
             _context = context;
-            _logger = logger;
         }
     
         [HttpPost]
         [Authorize]
-        public async Task<IActionResult> CreateTag([FromBody] TagDto tagDto)
+        public async Task<IActionResult> CreateTag([FromBody] TagCreationDto tagCreationDto)
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (userId == null)
             {
                 return Unauthorized();
             }
-            var tag = new Tag() { Kind = tagDto.Kind, Sign = tagDto.Sign, Name = tagDto.Name, User_id = int.Parse(userId) };
+            var tag = new Tag() { Kind = tagCreationDto.Kind, Sign = tagCreationDto.Sign, Name = tagCreationDto.Name, User_id = int.Parse(userId) };
             _context.Tags.Add(tag);
             await _context.SaveChangesAsync();
-            return Ok(new { resource = tag });
+            return Ok(new { resource = new 
+            {
+                tag.Id,
+                tag.User_id, 
+                tag.Name,
+                tag.Sign,
+                tag.Deleted_at,
+                tag.Created_at,
+                tag.Updated_at,
+                tag.Kind
+            }
+            });
+        }
+        [HttpGet]
+        [Authorize]
+        public async Task<IActionResult> GetTags([FromQuery] int page = 1, Kind kind = Kind.expenses)
+        {
+            var itemsPerPage = 10;
+            var tags = await _context.Tags
+                .Where(t => t.Kind == kind)
+                .OrderBy(t => t.Created_at)
+                .Skip((page - 1) * itemsPerPage)
+                .Take(itemsPerPage)
+                .ToListAsync();
+            var tagsDto = tags.Select(tag => new 
+            {
+                tag.Id,
+                tag.User_id, 
+                tag.Name,
+                tag.Sign,
+                tag.Deleted_at,
+                tag.Created_at,
+                tag.Updated_at,
+                tag.Kind
+            });
+            var response = new
+            {
+                resources = tagsDto,
+                pager = new
+                {
+                    page,
+                    per_page = itemsPerPage,
+                    total = _context.Tags.Count(t => t.Kind == kind)
+                }
+            };
+            return Ok(response);
+        }
+        
+        [HttpGet("{id}")]
+        [Authorize]
+        public async Task<IActionResult> GetTag(int id)
+        {
+            var tag = await _context.Tags.FindAsync(id);
+            if (tag == null)
+            {
+                return NotFound();
+            }
+            var tagDto = new
+            {
+                tag.Id,
+                tag.User_id,
+                tag.Name,
+                tag.Sign,
+                tag.Deleted_at,
+                tag.Created_at,
+                tag.Updated_at,
+                tag.Kind
+            };
+            return Ok(tagDto);
+        }
+        
+        [HttpPatch("{id}")]
+        [Authorize]
+        public async Task<IActionResult> PatchTag([FromBody] TagCreationDto tagCreationDto, [FromRoute] int id)
+        {
+            var tag = await _context.Tags.FindAsync(id);
+            if (tag == null)
+            {
+                return NotFound();
+            }
+            tag.Name = tagCreationDto.Name;
+            tag.Sign = tagCreationDto.Sign;
+            tag.Updated_at = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
+            var tagDto = new
+            {
+                tag.Id,
+                tag.User_id, 
+                tag.Name,
+                tag.Sign,
+                tag.Deleted_at,
+                tag.Created_at,
+                tag.Updated_at,
+                tag.Kind
+            };
+            return Ok(tagDto);
+        }
+
+        [HttpDelete("{id}")]
+        [Authorize]
+        public async Task<IActionResult> DeleteTag(int id)
+        {
+            var tag = await _context.Tags.FindAsync(id);
+            if (tag == null)
+            {
+                return NotFound();
+            }
+
+            _context.Tags.Remove(tag);
+            await _context.SaveChangesAsync();
+            return Ok(new {message = "Tag deleted successfully."});
         }
     }
 }
 
-public class TagDto
+public class TagCreationDto
 {
     public Kind Kind { get; set; }
     public string Sign { get; set; }
