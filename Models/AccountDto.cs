@@ -21,3 +21,10 @@ public class AccCreationDto
     public Kind Kind { get; set; }
     public int Tag_id { get; set; }
 }
+
+
+public enum GroupByOption
+{
+    happened_at,
+    tag_id
+}
