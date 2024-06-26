@@ -3,6 +3,7 @@ using bkpDN.Data;
 using bkpDN.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace bkpDN.Controllers
 {
@@ -60,6 +61,46 @@ namespace bkpDN.Controllers
                 tag
             });
 
+        }
+
+        [HttpGet]
+        [Authorize]
+        public async Task<IActionResult> GetAccounts([FromQuery] int page, DateTimeOffset happened_after,
+            DateTimeOffset happened_before)
+        {
+            DateTime happenedAfterUtc = happened_after.UtcDateTime;
+            DateTime happenedBeforeUtc = happened_before.UtcDateTime;
+            var itemsPerPage = 10;
+            var accounts = await _context.Accounts
+                .Where(a => a.Happened_at >= happenedAfterUtc && a.Happened_at <= happenedBeforeUtc)
+                .OrderBy(a => a.Happened_at)
+                .Skip((page - 1) * itemsPerPage)
+                .Take(itemsPerPage)
+                .ToListAsync();
+            var accountsDto = accounts.Select(account => new AccountDto
+            {
+                Id = account.Id,
+                User_id = account.User_id,
+                Amount = account.Amount,
+                Note = account.Note,
+                Tag_id = account.Tag_id,
+                Happened_at = account.Happened_at,
+                Created_at = account.Created_at,
+                Updated_at = account.Updated_at,
+                Kind = account.Kind,
+                Deleted_at = account.Deleted_at
+            });
+            var response = new
+            {
+                resources = accountsDto,
+                pager = new
+                {
+                    page,
+                    per_page = itemsPerPage,
+                    count = _context.Accounts.Count(a => a.Happened_at >= happenedAfterUtc && a.Happened_at <= happenedBeforeUtc)
+                }
+            };
+            return Ok(response);
         }
         
     }
