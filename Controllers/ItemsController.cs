@@ -102,6 +102,30 @@ namespace bkpDN.Controllers
             };
             return Ok(response);
         }
+
+        [HttpGet("balance")]
+        [Authorize]
+        public async Task<IActionResult> GetBalance([FromQuery] DateTimeOffset happened_after,
+            DateTimeOffset happened_before)
+        {
+            var happenedAfterUtc = happened_after.UtcDateTime;
+            var happenedBeforeUtc = happened_before.UtcDateTime;
+
+            var items = await _context.Accounts
+                .Where(a => a.Happened_at >= happenedAfterUtc && a.Happened_at <= happenedBeforeUtc)
+                .ToListAsync();
+            
+            var expenseSum = items.Where(a => a.Kind == Kind.expenses).Sum(a => a.Amount);
+            var incomeSum = items.Where(a => a.Kind == Kind.income).Sum(a => a.Amount);
+
+            return Ok(new
+            {
+                income = incomeSum,
+                expenses = expenseSum,
+                balance = incomeSum - expenseSum
+            });
+
+        }
         
     }
 }
