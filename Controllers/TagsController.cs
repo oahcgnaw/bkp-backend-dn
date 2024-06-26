@@ -31,17 +31,17 @@ namespace bkpDN.Controllers
             var tag = new Tag() { Kind = tagCreationDto.Kind, Sign = tagCreationDto.Sign, Name = tagCreationDto.Name, User_id = int.Parse(userId) };
             _context.Tags.Add(tag);
             await _context.SaveChangesAsync();
-            return Ok(new { resource = new 
-            {
-                tag.Id,
-                tag.User_id, 
-                tag.Name,
-                tag.Sign,
-                tag.Deleted_at,
-                tag.Created_at,
-                tag.Updated_at,
-                tag.Kind
-            }
+            return Ok(new { resource = new TagDto
+                {
+                    Id = tag.Id,
+                    User_id = tag.User_id, 
+                    Name = tag.Name,
+                    Sign = tag.Sign,
+                    Deleted_at = tag.Deleted_at,
+                    Created_at = tag.Created_at,
+                    Updated_at = tag.Updated_at,
+                    Kind = tag.Kind
+                }
             });
         }
         [HttpGet]
@@ -55,16 +55,16 @@ namespace bkpDN.Controllers
                 .Skip((page - 1) * itemsPerPage)
                 .Take(itemsPerPage)
                 .ToListAsync();
-            var tagsDto = tags.Select(tag => new 
+            var tagsDto = tags.Select(tag => new TagDto
             {
-                tag.Id,
-                tag.User_id, 
-                tag.Name,
-                tag.Sign,
-                tag.Deleted_at,
-                tag.Created_at,
-                tag.Updated_at,
-                tag.Kind
+                Id = tag.Id,
+                User_id = tag.User_id, 
+                Name = tag.Name,
+                Sign = tag.Sign,
+                Deleted_at = tag.Deleted_at,
+                Created_at = tag.Created_at,
+                Updated_at = tag.Updated_at,
+                Kind = tag.Kind
             });
             var response = new
             {
@@ -88,16 +88,16 @@ namespace bkpDN.Controllers
             {
                 return NotFound();
             }
-            var tagDto = new
+            var tagDto = new TagDto
             {
-                tag.Id,
-                tag.User_id,
-                tag.Name,
-                tag.Sign,
-                tag.Deleted_at,
-                tag.Created_at,
-                tag.Updated_at,
-                tag.Kind
+                Id = tag.Id,
+                User_id = tag.User_id, 
+                Name = tag.Name,
+                Sign = tag.Sign,
+                Deleted_at = tag.Deleted_at,
+                Created_at = tag.Created_at,
+                Updated_at = tag.Updated_at,
+                Kind = tag.Kind
             };
             return Ok(tagDto);
         }
@@ -115,16 +115,16 @@ namespace bkpDN.Controllers
             tag.Sign = tagCreationDto.Sign;
             tag.Updated_at = DateTime.UtcNow;
             await _context.SaveChangesAsync();
-            var tagDto = new
+            var tagDto = new TagDto
             {
-                tag.Id,
-                tag.User_id, 
-                tag.Name,
-                tag.Sign,
-                tag.Deleted_at,
-                tag.Created_at,
-                tag.Updated_at,
-                tag.Kind
+                Id = tag.Id,
+                User_id = tag.User_id, 
+                Name = tag.Name,
+                Sign = tag.Sign,
+                Deleted_at = tag.Deleted_at,
+                Created_at = tag.Created_at,
+                Updated_at = tag.Updated_at,
+                Kind = tag.Kind
             };
             return Ok(tagDto);
         }
@@ -144,11 +144,4 @@ namespace bkpDN.Controllers
             return Ok(new {message = "Tag deleted successfully."});
         }
     }
-}
-
-public class TagCreationDto
-{
-    public Kind Kind { get; set; }
-    public string Sign { get; set; }
-    public string Name { get; set; }
 }

@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace bkpDN.Models;
 
@@ -21,6 +22,7 @@ public class Tag
     
     public Kind Kind { get; set; }
     
+    [JsonIgnore]
     public ICollection<Account> Accounts { get; set; }
     
 }
