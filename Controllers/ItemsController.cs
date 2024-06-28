@@ -68,11 +68,16 @@ namespace bkpDN.Controllers
         public async Task<IActionResult> GetAccounts([FromQuery] int page, DateTimeOffset happened_after,
             DateTimeOffset happened_before)
         {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (userId == null)
+            {
+                return Unauthorized();
+            }
             DateTime happenedAfterUtc = happened_after.UtcDateTime;
             DateTime happenedBeforeUtc = happened_before.UtcDateTime;
             var itemsPerPage = 10;
             var accounts = await _context.Accounts
-                .Where(a => a.Happened_at >= happenedAfterUtc && a.Happened_at <= happenedBeforeUtc)
+                .Where(a => a.User_id == int.Parse(userId) && a.Happened_at >= happenedAfterUtc && a.Happened_at <= happenedBeforeUtc)
                 .OrderBy(a => a.Happened_at)
                 .Skip((page - 1) * itemsPerPage)
                 .Take(itemsPerPage)
@@ -108,11 +113,16 @@ namespace bkpDN.Controllers
         public async Task<IActionResult> GetBalance([FromQuery] DateTimeOffset happened_after,
             DateTimeOffset happened_before)
         {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (userId == null)
+            {
+                return Unauthorized();
+            }
             var happenedAfterUtc = happened_after.UtcDateTime;
             var happenedBeforeUtc = happened_before.UtcDateTime;
 
             var items = await _context.Accounts
-                .Where(a => a.Happened_at >= happenedAfterUtc && a.Happened_at <= happenedBeforeUtc)
+                .Where(a => a.User_id == int.Parse(userId) && a.Happened_at >= happenedAfterUtc && a.Happened_at <= happenedBeforeUtc)
                 .ToListAsync();
             
             var expenseSum = items.Where(a => a.Kind == Kind.expenses).Sum(a => a.Amount);
@@ -131,10 +141,19 @@ namespace bkpDN.Controllers
         [Authorize]
         public async Task<IActionResult> DeleteAccount(int id)
         {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (userId == null)
+            {
+                return Unauthorized();
+            }
             var account = await _context.Accounts.FindAsync(id);
             if (account == null)
             {
                 return NotFound();
+            }
+            if (account.User_id != int.Parse(userId))
+            {
+                return Unauthorized();
             }
             _context.Accounts.Remove(account);
             await _context.SaveChangesAsync();
@@ -145,11 +164,16 @@ namespace bkpDN.Controllers
         [Authorize]
         public async Task<IActionResult> GetSummary([FromQuery] DateTimeOffset happened_after, DateTimeOffset happened_before, Kind kind, GroupByOption group_by)
         {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (userId == null)
+            {
+                return Unauthorized();
+            }
             var happenedAfterUtc = happened_after.UtcDateTime;
             var happenedBeforeUtc = happened_before.UtcDateTime;
             
             var items = await _context.Accounts
-                .Where(a => a.Happened_at >= happenedAfterUtc && a.Happened_at <= happenedBeforeUtc)
+                .Where(a => a.User_id == int.Parse(userId) && a.Happened_at >= happenedAfterUtc && a.Happened_at <= happenedBeforeUtc)
                 .ToListAsync();
             
             if (group_by == GroupByOption.happened_at)

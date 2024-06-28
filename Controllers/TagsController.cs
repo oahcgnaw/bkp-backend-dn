@@ -48,9 +48,14 @@ namespace bkpDN.Controllers
         [Authorize]
         public async Task<IActionResult> GetTags([FromQuery] int page = 1, Kind kind = Kind.expenses)
         {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (userId == null)
+            {
+                return Unauthorized();
+            }
             var itemsPerPage = 10;
             var tags = await _context.Tags
-                .Where(t => t.Kind == kind)
+                .Where(t => t.User_id == int.Parse(userId) && t.Kind == kind)
                 .OrderBy(t => t.Created_at)
                 .Skip((page - 1) * itemsPerPage)
                 .Take(itemsPerPage)
@@ -73,7 +78,7 @@ namespace bkpDN.Controllers
                 {
                     page,
                     per_page = itemsPerPage,
-                    total = _context.Tags.Count(t => t.Kind == kind)
+                    total = tags.Count(t => t.Kind == kind)
                 }
             };
             return Ok(response);
@@ -83,10 +88,19 @@ namespace bkpDN.Controllers
         [Authorize]
         public async Task<IActionResult> GetTag(int id)
         {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (userId == null)
+            {
+                return Unauthorized();
+            }
             var tag = await _context.Tags.FindAsync(id);
             if (tag == null)
             {
                 return NotFound();
+            }
+            if (tag.User_id != int.Parse(userId))
+            {
+                return Unauthorized();
             }
             var tagDto = new TagDto
             {
@@ -106,11 +120,21 @@ namespace bkpDN.Controllers
         [Authorize]
         public async Task<IActionResult> PatchTag([FromBody] TagCreationDto tagCreationDto, [FromRoute] int id)
         {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (userId == null)
+            {
+                return Unauthorized();
+            }
             var tag = await _context.Tags.FindAsync(id);
             if (tag == null)
             {
                 return NotFound();
             }
+            if (tag.User_id != int.Parse(userId))
+            {
+                return Unauthorized();
+            }
+            tag.Kind = tagCreationDto.Kind;
             tag.Name = tagCreationDto.Name;
             tag.Sign = tagCreationDto.Sign;
             tag.Updated_at = DateTime.UtcNow;
@@ -133,12 +157,20 @@ namespace bkpDN.Controllers
         [Authorize]
         public async Task<IActionResult> DeleteTag(int id)
         {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (userId == null)
+            {
+                return Unauthorized();
+            }
             var tag = await _context.Tags.FindAsync(id);
             if (tag == null)
             {
                 return NotFound();
             }
-
+            if (tag.User_id != int.Parse(userId))
+            {
+                return Unauthorized();
+            }
             _context.Tags.Remove(tag);
             await _context.SaveChangesAsync();
             return Ok(new {message = "Tag deleted successfully."});
