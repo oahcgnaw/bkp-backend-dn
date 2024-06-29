@@ -10,10 +10,10 @@ public class ValidationCode
     public int Id { get; set; }
     
     [MaxLength(100)]
-    public string User_email { get; set; }
+    public required string User_email { get; set; }
     
     [MaxLength(6)]
-    public string Validation_code { get; set; }
+    public required string Validation_code { get; set; }
     
     public DateTime Timestamp { get; set; } = DateTime.UtcNow;
     

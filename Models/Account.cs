@@ -12,7 +12,7 @@ public class Account
     
     public int User_id { get; set; }
     [ForeignKey("User_id")]
-    public User User { get; set; }
+    public User? User { get; set; }
     
     public int Amount { get; set; }
     public string? Note { get; set; }
@@ -20,7 +20,7 @@ public class Account
     public int Tag_id { get; set; }
     [ForeignKey("Tag_id")]
     [JsonIgnore]
-    public Tag Tag { get; set; }
+    public Tag? Tag { get; set; }
     
     public Kind Kind { get; set; }
     public DateTime Happened_at { get; set; } = DateTime.UtcNow;

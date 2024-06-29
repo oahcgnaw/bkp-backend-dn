@@ -11,10 +11,10 @@ public class Tag
     public int Id { get; set; }
     public int User_id { get; set; }
     [ForeignKey("User_id")]
-    public User User { get; set; } // Navigation property
+    public User? User { get; set; } // Navigation property
     
-    public string Name { get; set; }
-    public string Sign { get; set; }
+    public required string Name { get; set; }
+    public required string Sign { get; set; }
     
     public DateTime? Deleted_at { get; set; }
     public DateTime Created_at { get; set; } = DateTime.UtcNow;
@@ -23,7 +23,7 @@ public class Tag
     public Kind Kind { get; set; }
     
     [JsonIgnore]
-    public ICollection<Account> Accounts { get; set; }
+    public ICollection<Account> Accounts { get; set; } = new List<Account>();
     
 }
 

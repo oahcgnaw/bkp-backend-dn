@@ -2,17 +2,17 @@ namespace bkpDN.Models;
 
 public class AccountDto
 {
-    public int Id { get; set; }
-    public int User_id { get; set; }
-    public int Amount { get; set; }
-    public string? Note { get; set; }
-    public int Tag_id { get; set; }
-    public DateTime Happened_at { get; set; }
-    public DateTime Created_at { get; set; }
-    public DateTime Updated_at { get; set; }
-    public DateTime? Deleted_at { get; set; }
-    public Kind Kind { get; set; }
-    public Tag Tag { get; set; }
+    public required int Id { get; set; }
+    public required int User_id { get; set; }
+    public required int Amount { get; set; }
+    public required string? Note { get; set; }
+    public required int Tag_id { get; set; }
+    public required DateTime Happened_at { get; set; }
+    public required DateTime Created_at { get; set; }
+    public required DateTime Updated_at { get; set; }
+    public required DateTime? Deleted_at { get; set; }
+    public required Kind Kind { get; set; }
+    public required Tag Tag { get; set; }
 }
 
 public class AccCreationDto
