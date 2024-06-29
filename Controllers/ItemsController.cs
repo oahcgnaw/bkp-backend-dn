@@ -12,7 +12,6 @@ namespace bkpDN.Controllers
     public class ItemsController: ControllerBase
     {
         private readonly AppDbContext _context;
-
         public ItemsController(AppDbContext context)
         {
             _context = context;
@@ -42,6 +41,10 @@ namespace bkpDN.Controllers
             await _context.SaveChangesAsync();
 
             var tag = await _context.Tags.FindAsync(accCreationDto.Tag_id);
+            if (tag == null)
+            {
+                return NotFound();
+            }
 
             return Ok(new
             {
@@ -56,45 +59,71 @@ namespace bkpDN.Controllers
                     Created_at = account.Created_at,
                     Updated_at = account.Updated_at,
                     Kind = account.Kind,
-                    Deleted_at = account.Deleted_at
+                    Deleted_at = account.Deleted_at,
+                    Tag = tag
                 },
-                tag
             });
 
         }
 
         [HttpGet]
         [Authorize]
-        public async Task<IActionResult> GetAccounts([FromQuery] int page, DateTimeOffset happened_after,
-            DateTimeOffset happened_before)
+        public async Task<IActionResult> GetAccounts([FromQuery] int page, DateTimeOffset? happened_after,
+            DateTimeOffset? happened_before)
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (userId == null)
             {
                 return Unauthorized();
             }
-            DateTime happenedAfterUtc = happened_after.UtcDateTime;
-            DateTime happenedBeforeUtc = happened_before.UtcDateTime;
             var itemsPerPage = 10;
-            var accounts = await _context.Accounts
-                .Where(a => a.User_id == int.Parse(userId) && a.Happened_at >= happenedAfterUtc && a.Happened_at <= happenedBeforeUtc)
-                .OrderBy(a => a.Happened_at)
-                .Skip((page - 1) * itemsPerPage)
-                .Take(itemsPerPage)
-                .ToListAsync();
-            var accountsDto = accounts.Select(account => new AccountDto
+            List<Account> accounts;
+            DateTime happenedAfterUtc;
+            DateTime happenedBeforeUtc;
+            int count;
+
+            // if both happened_after and happened_before are provided, use them
+            if (happened_after.HasValue && happened_before.HasValue)
             {
-                Id = account.Id,
-                User_id = account.User_id,
-                Amount = account.Amount,
-                Note = account.Note,
-                Tag_id = account.Tag_id,
-                Happened_at = account.Happened_at,
-                Created_at = account.Created_at,
-                Updated_at = account.Updated_at,
-                Kind = account.Kind,
-                Deleted_at = account.Deleted_at
-            });
+                happenedAfterUtc = happened_after.Value.UtcDateTime;
+                happenedBeforeUtc = happened_before.Value.UtcDateTime;
+            
+                accounts = await _context.Accounts
+                    .Where(a => a.User_id == int.Parse(userId) && a.Happened_at >= happenedAfterUtc && a.Happened_at <= happenedBeforeUtc)
+                    .OrderBy(a => a.Happened_at)
+                    .Skip((page - 1) * itemsPerPage)
+                    .Take(itemsPerPage)
+                    .Include(a => a.Tag)
+                    .ToListAsync();
+
+                count = _context.Accounts.Count(a => a.User_id == int.Parse(userId) && a.Happened_at >= happenedAfterUtc && a.Happened_at <= happenedBeforeUtc);
+            }
+            else // if no happened_after or happened_before is provided, the endpoint is used to decide whether to keep user on Home page or Items page
+            {
+                accounts = await _context.Accounts
+                    .Where(a => a.User_id == int.Parse(userId))
+                    .OrderBy(a => a.Happened_at)
+                    .Take(itemsPerPage)
+                    .Include(a => a.Tag)
+                    .ToListAsync();
+                count = _context.Accounts.Count(a => a.User_id == int.Parse(userId));
+            }
+
+            var accountsDto = accounts.Select(account => new AccountDto
+                {
+                    Id = account.Id,
+                    User_id = account.User_id,
+                    Amount = account.Amount,
+                    Note = account.Note,
+                    Tag_id = account.Tag_id,
+                    Happened_at = account.Happened_at,
+                    Created_at = account.Created_at,
+                    Updated_at = account.Updated_at,
+                    Kind = account.Kind,
+                    Deleted_at = account.Deleted_at,
+                    Tag = account.Tag
+                }
+            );
             var response = new
             {
                 resources = accountsDto,
@@ -102,7 +131,7 @@ namespace bkpDN.Controllers
                 {
                     page,
                     per_page = itemsPerPage,
-                    count = _context.Accounts.Count(a => a.Happened_at >= happenedAfterUtc && a.Happened_at <= happenedBeforeUtc)
+                    count
                 }
             };
             return Ok(response);
@@ -173,7 +202,7 @@ namespace bkpDN.Controllers
             var happenedBeforeUtc = happened_before.UtcDateTime;
             
             var items = await _context.Accounts
-                .Where(a => a.User_id == int.Parse(userId) && a.Happened_at >= happenedAfterUtc && a.Happened_at <= happenedBeforeUtc)
+                .Where(a => a.User_id == int.Parse(userId) && a.Kind == kind && a.Happened_at >= happenedAfterUtc && a.Happened_at <= happenedBeforeUtc)
                 .ToListAsync();
             
             if (group_by == GroupByOption.happened_at)

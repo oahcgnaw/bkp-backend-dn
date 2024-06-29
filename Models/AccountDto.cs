@@ -12,6 +12,7 @@ public class AccountDto
     public DateTime Updated_at { get; set; }
     public DateTime? Deleted_at { get; set; }
     public Kind Kind { get; set; }
+    public Tag Tag { get; set; }
 }
 
 public class AccCreationDto

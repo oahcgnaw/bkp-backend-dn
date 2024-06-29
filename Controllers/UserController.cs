@@ -28,13 +28,16 @@ namespace bkpDN.Controllers
         public async Task<IActionResult> CreateUser([FromBody] Dictionary<string, string> body)
         {
             // validate the email and code from the request body to the ones in the validationCodes table, then check if user is already in the users table, if not insert user into the users table, and return a jwt token finally
-
+            
+            // check and validate the latest validation code 
             var validationCode = await _context.ValidationCodes
-                .Where(vc => vc.User_email == body["email"] && vc.Validation_code == body["code"])
+                .Where(v => v.User_email == body["email"])
+                .OrderByDescending(v => v.Timestamp)
                 .FirstOrDefaultAsync();
-            if (validationCode == null)
+            // OrderByDescending and FirstOrDefaultAsync are used since LastOrDefaultAsync() fetches all records and then finds the last one in memory, which is less efficient.
+            if (validationCode == null || validationCode.Validation_code != body["code"])
             {
-                return Unauthorized("Invalid or expired validation code.");
+                return Unauthorized();
             }
 
             var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == body["email"]);
