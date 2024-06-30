@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  bkpDN:
+    image: towski0804/bookkeeper:dotnet-latest
+    env_file:
+      - .env
+    ports:
+      - "5235:5235"
+    depends_on:
+      - mypostgres
+
+  mypostgres:
+    image: postgres:latest
+    ports:
+      - "5432:5432"
+    volumes:
+      - mypostgres:/var/lib/postgresql/data
+    environment:
+      POSTGRES_PASSWORD: 123123
+
+volumes:
+  mypostgres:

@@ -9,6 +9,9 @@ using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Read environment variables from .env
+builder.Configuration.AddEnvironmentVariables();
+
 // Configure JSON enum converter so that enum values are serialized as strings
 // If not set, enum values are serialized as numbers
 builder.Services.AddControllers()
