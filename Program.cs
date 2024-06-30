@@ -13,7 +13,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Configuration.AddEnvironmentVariables();
 
 // Configure JSON enum converter so that enum values are serialized as strings
-// If not set, enum values are serialized as numbers
+// This ensures enum values are represented as strings in JSON requests and responses
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
